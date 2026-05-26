@@ -10,7 +10,7 @@ from datetime import datetime
 
 import os
 
-TOKEN = os.getenv("TOKEN")
+TOKEN = os.getenv("8966773536:AAHN4eLyYBPs9kqm3zrG6fyx9-ralws3LPU")
 
 ADMINS = [
     8943277650,
