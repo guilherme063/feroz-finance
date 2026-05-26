@@ -16,13 +16,13 @@ from datetime import datetime
 import os
 
 # ==================================================
-# 🔐 TOKEN
+# TOKEN
 # ==================================================
 
 TOKEN = os.getenv("8966773536:AAHN4eLyYBPs9kqm3zrG6fyx9-ralws3LPU")
 
 # ==================================================
-# 👤 ADMINS
+# USUÁRIOS
 # ==================================================
 
 ADMINS = [
@@ -31,7 +31,7 @@ ADMINS = [
 ]
 
 # ==================================================
-# 💾 DATABASE
+# DATABASE
 # ==================================================
 
 db = sqlite3.connect(
@@ -55,14 +55,14 @@ CREATE TABLE IF NOT EXISTS movimentacoes(
 db.commit()
 
 # ==================================================
-# 🎨 EMOJIS
+# EMOJIS
 # ==================================================
 
 EMOJIS = {
 
     "mercado": "🛒",
-    "gasolina": "⛽",
     "combustivel": "⛽",
+    "gasolina": "⛽",
     "lanche": "🍔",
     "ifood": "🍕",
     "internet": "🌐",
@@ -78,7 +78,7 @@ EMOJIS = {
 }
 
 # ==================================================
-# 👤 NOME
+# PEGAR NOME
 # ==================================================
 
 def pegar_nome(user_id):
@@ -92,7 +92,7 @@ def pegar_nome(user_id):
     return "Usuário"
 
 # ==================================================
-# 🏠 MENU
+# MENU
 # ==================================================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -116,30 +116,26 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         resize_keyboard=True
     )
 
-    texto = f"""
-╔══════════════════════╗
-      💎 FEROZ FINANCE
-╚══════════════════════╝
-
-🏦 SISTEMA FINANCEIRO PREMIUM
+    texto = """
+💎 FEROZ FINANCE
 
 ━━━━━━━━━━━━━━━━━━
+
+🏦 Sistema Financeiro
 
 💸 Controle de gastos
 💰 Controle de receitas
 📊 Relatórios automáticos
 🏆 Ranking financeiro
-🗑 Exclusão rápida
-📆 Histórico mensal
 
 ━━━━━━━━━━━━━━━━━━
 
 🔥 COMO USAR
 
-💸 Adicionar gasto:
+💸 Gasto:
 g 50 mercado
 
-💰 Adicionar receita:
+💰 Receita:
 r 1500 salario
 
 🗑 Apagar:
@@ -154,19 +150,34 @@ apagar 3
     )
 
 # ==================================================
-# 💸 GASTO
+# GASTO
 # ==================================================
 
-async def gasto(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def registrar_gasto(update):
 
     texto = update.message.text.lower()
 
     partes = texto.split()
 
     if len(partes) < 3:
+
+        await update.message.reply_text(
+            "Use:\ng 50 mercado"
+        )
+
         return
 
-    valor = float(partes[1])
+    try:
+
+        valor = float(partes[1])
+
+    except:
+
+        await update.message.reply_text(
+            "Valor inválido."
+        )
+
+        return
 
     categoria = partes[2]
 
@@ -201,9 +212,7 @@ async def gasto(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await update.message.reply_text(f"""
-╔════════════════╗
-   ✅ GASTO SALVO
-╚════════════════╝
+✅ GASTO SALVO
 
 {emoji} Categoria:
 {categoria}
@@ -219,19 +228,34 @@ R${valor}
 """)
 
 # ==================================================
-# 💰 RECEITA
+# RECEITA
 # ==================================================
 
-async def receita(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def registrar_receita(update):
 
     texto = update.message.text.lower()
 
     partes = texto.split()
 
     if len(partes) < 3:
+
+        await update.message.reply_text(
+            "Use:\nr 1500 salario"
+        )
+
         return
 
-    valor = float(partes[1])
+    try:
+
+        valor = float(partes[1])
+
+    except:
+
+        await update.message.reply_text(
+            "Valor inválido."
+        )
+
+        return
 
     categoria = partes[2]
 
@@ -266,9 +290,7 @@ async def receita(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await update.message.reply_text(f"""
-╔══════════════════╗
-   ✅ RECEITA SALVA
-╚══════════════════╝
+✅ RECEITA SALVA
 
 {emoji} Categoria:
 {categoria}
@@ -284,10 +306,10 @@ R${valor}
 """)
 
 # ==================================================
-# 📋 LISTA
+# LISTA
 # ==================================================
 
-async def lista(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def lista(update):
 
     cursor.execute("""
     SELECT * FROM movimentacoes
@@ -297,15 +319,15 @@ async def lista(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     dados = cursor.fetchall()
 
-    if not dados:
+    if len(dados) == 0:
 
         await update.message.reply_text(
-            "📭 Nenhuma movimentação"
+            "📭 Nenhuma movimentação."
         )
 
         return
 
-    texto = "📋 ÚLTIMAS MOVIMENTAÇÕES\n\n"
+    texto = "📋 MOVIMENTAÇÕES\n\n"
 
     for mov in dados:
 
@@ -334,10 +356,10 @@ async def lista(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(texto)
 
 # ==================================================
-# 🗑 APAGAR
+# APAGAR
 # ==================================================
 
-async def apagar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def apagar(update):
 
     texto = update.message.text.lower()
 
@@ -361,14 +383,14 @@ async def apagar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db.commit()
 
     await update.message.reply_text(
-        f"🗑 Registro {idd} apagado"
+        f"🗑 Registro {idd} apagado."
     )
 
 # ==================================================
-# 📊 TOTAL
+# RELATÓRIO
 # ==================================================
 
-async def total(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def relatorio(update):
 
     cursor.execute("""
     SELECT SUM(valor)
@@ -395,9 +417,7 @@ async def total(update: Update, context: ContextTypes.DEFAULT_TYPE):
     saldo = receitas - gastos
 
     texto = f"""
-╔══════════════════╗
-     📊 RELATÓRIO
-╚══════════════════╝
+📊 RELATÓRIO GERAL
 
 💸 Gastos:
 R${round(gastos,2)}
@@ -412,145 +432,10 @@ R${round(saldo,2)}
     await update.message.reply_text(texto)
 
 # ==================================================
-# 🏦 SALDO
+# RANKING
 # ==================================================
 
-async def saldo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    cursor.execute("""
-    SELECT SUM(valor)
-    FROM movimentacoes
-    WHERE tipo='receita'
-    """)
-
-    receitas = cursor.fetchone()[0]
-
-    cursor.execute("""
-    SELECT SUM(valor)
-    FROM movimentacoes
-    WHERE tipo='gasto'
-    """)
-
-    gastos = cursor.fetchone()[0]
-
-    if receitas is None:
-        receitas = 0
-
-    if gastos is None:
-        gastos = 0
-
-    saldo_final = receitas - gastos
-
-    await update.message.reply_text(f"""
-🏦 SALDO ATUAL
-
-💵 R${round(saldo_final,2)}
-""")
-
-# ==================================================
-# 📅 HOJE
-# ==================================================
-
-async def hoje(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    hoje = datetime.now().strftime(
-        "%d/%m/%Y"
-    )
-
-    cursor.execute("""
-    SELECT * FROM movimentacoes
-    ORDER BY id DESC
-    """)
-
-    dados = cursor.fetchall()
-
-    texto = "📅 MOVIMENTAÇÕES DE HOJE\n\n"
-
-    encontrou = False
-
-    for mov in dados:
-
-        data = mov[5]
-
-        if hoje in data:
-
-            encontrou = True
-
-            categoria = mov[3]
-            valor = mov[2]
-            nome = mov[1]
-
-            emoji = EMOJIS.get(
-                categoria,
-                "💰"
-            )
-
-            texto += (
-                f"{emoji} {categoria}\n"
-                f"💵 R${valor}\n"
-                f"👤 {nome}\n\n"
-            )
-
-    if not encontrou:
-
-        texto = "📭 Nenhuma movimentação hoje"
-
-    await update.message.reply_text(texto)
-
-# ==================================================
-# 📆 MÊS
-# ==================================================
-
-async def mes(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    mes_atual = datetime.now().strftime(
-        "%m/%Y"
-    )
-
-    cursor.execute("""
-    SELECT * FROM movimentacoes
-    ORDER BY id DESC
-    """)
-
-    dados = cursor.fetchall()
-
-    total_mes = 0
-
-    texto = "📆 RELATÓRIO DO MÊS\n\n"
-
-    for mov in dados:
-
-        data = mov[5]
-
-        if mes_atual in data:
-
-            categoria = mov[3]
-            valor = mov[2]
-
-            emoji = EMOJIS.get(
-                categoria,
-                "💰"
-            )
-
-            texto += (
-                f"{emoji} {categoria} - "
-                f"R${valor}\n"
-            )
-
-            total_mes += valor
-
-    texto += (
-        f"\n🏦 Total movimentado:\n"
-        f"R${round(total_mes,2)}"
-    )
-
-    await update.message.reply_text(texto)
-
-# ==================================================
-# 🏆 RANKING
-# ==================================================
-
-async def ranking(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def ranking(update):
 
     cursor.execute("""
     SELECT nome, SUM(valor)
@@ -562,7 +447,7 @@ async def ranking(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     dados = cursor.fetchall()
 
-    texto = "🏆 RANKING DE GASTOS\n\n"
+    texto = "🏆 RANKING\n\n"
 
     for pos, item in enumerate(dados, start=1):
 
@@ -577,69 +462,64 @@ async def ranking(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(texto)
 
 # ==================================================
-# 🎛 MENU BOTÕES
+# MENSAGENS
 # ==================================================
 
-async def menu_texto(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def mensagens(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    if update.effective_user.id not in ADMINS:
+        return
 
     texto = update.message.text
 
     if texto == "➕ Gasto":
 
         await update.message.reply_text(
-            "💸 Digite:\n\ng 50 mercado"
+            "💸 Exemplo:\ng 50 mercado"
         )
 
     elif texto == "💰 Receita":
 
         await update.message.reply_text(
-            "💰 Digite:\n\nr 1500 salario"
+            "💰 Exemplo:\nr 1500 salario"
         )
 
     elif texto == "📊 Relatório":
 
-        await total(update, context)
+        await relatorio(update)
 
     elif texto == "🏦 Saldo":
 
-        await saldo(update, context)
-
-    elif texto == "📅 Hoje":
-
-        await hoje(update, context)
-
-    elif texto == "📆 Mês":
-
-        await mes(update, context)
+        await relatorio(update)
 
     elif texto == "📋 Lista":
 
-        await lista(update, context)
+        await lista(update)
 
     elif texto == "🏆 Ranking":
 
-        await ranking(update, context)
+        await ranking(update)
 
     elif texto == "🗑 Apagar":
 
         await update.message.reply_text(
-            "🗑 Digite:\n\napagar 3"
+            "🗑 Exemplo:\napagar 3"
         )
 
-    elif texto.startswith("g "):
+    elif texto.lower().startswith("g "):
 
-        await gasto(update, context)
+        await registrar_gasto(update)
 
-    elif texto.startswith("r "):
+    elif texto.lower().startswith("r "):
 
-        await receita(update, context)
+        await registrar_receita(update)
 
-    elif texto.startswith("apagar"):
+    elif texto.lower().startswith("apagar"):
 
-        await apagar(update, context)
+        await apagar(update)
 
 # ==================================================
-# 🚀 APP
+# APP
 # ==================================================
 
 app = (
@@ -655,7 +535,7 @@ app.add_handler(
 app.add_handler(
     MessageHandler(
         filters.TEXT,
-        menu_texto
+        mensagens
     )
 )
 
