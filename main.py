@@ -9,7 +9,7 @@ import sqlite3
 
 # ========= TOKEN =========
 
-TOKEN = "8815119539:AAEk6FxEwuzSvZ6H15BXNou7Kk9TAtXzTcg"
+TOKEN = "8966773536:AAHN4eLyYBPs9kqm3zrG6fyx9-ralws3LPU"
 
 # ========= ADMINS =========
 
