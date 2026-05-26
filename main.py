@@ -15,11 +15,13 @@ import sqlite3
 from datetime import datetime
 import os
 
-TOKEN = "8966773536:AAHN4eLyYBPs9kqm3zrG6fyx9-ralws3LPU"
+# ================= CONFIG =================
+
+TOKEN = os.getenv("8966773536:AAHN4eLyYBPs9kqm3zrG6fyx9-ralws3LPU")
 
 ADMINS = [
-    8943277650,
-    8626825035
+    8943277650,  # Guilherme
+    8626825035   # Maiane
 ]
 
 # ================= DATABASE =================
@@ -46,8 +48,10 @@ db.commit()
 # ================= EMOJIS =================
 
 EMOJIS = {
+
     "mercado": "🛒",
     "combustivel": "⛽",
+    "gasolina": "⛽",
     "cartao": "💳",
     "moto": "🏍",
     "internet": "🌐",
@@ -56,11 +60,15 @@ EMOJIS = {
     "salario": "💰",
     "extra": "🪙",
     "pix": "📲",
-    "streaming": "📺",
-    "casa": "🏠"
+    "almoço": "🍽",
+    "ifood": "🍕",
+    "roupa": "👕",
+    "uber": "🚗",
+    "presente": "🎁"
+
 }
 
-# ================= NOME =================
+# ================= FUNÇÕES =================
 
 def pegar_nome(user_id):
 
@@ -82,10 +90,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton(
                 "💸 Adicionar Gasto",
                 callback_data="gasto"
-            )
-        ],
+            ),
 
-        [
             InlineKeyboardButton(
                 "💰 Adicionar Receita",
                 callback_data="receita"
@@ -94,13 +100,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         [
             InlineKeyboardButton(
-                "📋 Lista",
-                callback_data="lista"
+                "📊 Relatórios",
+                callback_data="relatorios"
             ),
 
             InlineKeyboardButton(
-                "📊 Total",
-                callback_data="total"
+                "🏦 Saldo",
+                callback_data="saldo"
             )
         ],
 
@@ -118,44 +124,52 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         [
             InlineKeyboardButton(
-                "🏦 Saldo",
-                callback_data="saldo"
+                "🏆 Ranking",
+                callback_data="ranking"
             ),
 
             InlineKeyboardButton(
-                "🏆 Ranking",
-                callback_data="ranking"
+                "📋 Lista",
+                callback_data="lista"
             )
         ]
+
     ]
 
-    reply_markup = InlineKeyboardMarkup(teclado)
+    painel = InlineKeyboardMarkup(teclado)
 
     texto = """
-╔════════════════════╗
-║   FEROZ FINANCE    ║
-╚════════════════════╝
+╔══════════════════════╗
+      💎 FEROZ FINANCE
+╚══════════════════════╝
 
-💰 CONTROLE FINANCEIRO
+🏦 SISTEMA FINANCEIRO
 
-👤 Guilherme & Maiane
+👤 Guilherme
+👤 Maiane
 
-━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━
+💸 Controle de gastos
+💰 Controle de ganhos
+📊 Relatórios automáticos
+🏆 Ranking financeiro
+━━━━━━━━━━━━━━━━━━━
 
-📌 COMANDOS RÁPIDOS
-
-/g 50 mercado
-/r 2500 salario
-
-━━━━━━━━━━━━━━
+Escolha uma opção abaixo 👇
 """
 
     await update.message.reply_text(
         texto,
-        reply_markup=reply_markup
+        reply_markup=painel
     )
 
-# ================= MENU BOTÕES =================
+# ================= MENU =================
+
+async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    await start(update, context)
+
+# ================= BOTÕES =================
 
 async def botoes(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -163,37 +177,38 @@ async def botoes(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await query.answer()
 
-    escolha = query.data
+    opcao = query.data
 
-    comandos = {
+    respostas = {
 
         "gasto":
-        "💸 Adicionar gasto:\n\n/g 50 mercado",
+        "💸 Exemplo:\n/g 50 mercado",
 
         "receita":
-        "💰 Adicionar receita:\n\n/r 2500 salario",
+        "💰 Exemplo:\n/r 1500 salario",
 
-        "lista":
-        "/lista",
-
-        "total":
-        "/total",
-
-        "hoje":
-        "/hoje",
-
-        "mes":
-        "/mes",
+        "relatorios":
+        "📊 Use:\n/total",
 
         "saldo":
-        "/saldo",
+        "🏦 Use:\n/saldo",
+
+        "hoje":
+        "📅 Use:\n/hoje",
+
+        "mes":
+        "📆 Use:\n/mes",
 
         "ranking":
-        "/ranking"
+        "🏆 Use:\n/ranking",
+
+        "lista":
+        "📋 Use:\n/lista"
+
     }
 
     await query.message.reply_text(
-        comandos.get(escolha)
+        respostas.get(opcao)
     )
 
 # ================= GASTO =================
@@ -201,6 +216,11 @@ async def botoes(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def gasto(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if update.effective_user.id not in ADMINS:
+
+        await update.message.reply_text(
+            "❌ Sem permissão"
+        )
+
         return
 
     if len(context.args) < 2:
@@ -211,17 +231,7 @@ async def gasto(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         return
 
-    try:
-
-        valor = float(context.args[0])
-
-    except:
-
-        await update.message.reply_text(
-            "Valor inválido"
-        )
-
-        return
+    valor = float(context.args[0])
 
     categoria = context.args[1].lower()
 
@@ -246,7 +256,10 @@ async def gasto(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     db.commit()
 
-    emoji = EMOJIS.get(categoria, "💸")
+    emoji = EMOJIS.get(
+        categoria,
+        "💸"
+    )
 
     texto = f"""
 ✅ GASTO SALVO
@@ -271,27 +284,22 @@ R${valor}
 async def receita(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if update.effective_user.id not in ADMINS:
+
+        await update.message.reply_text(
+            "❌ Sem permissão"
+        )
+
         return
 
     if len(context.args) < 2:
 
         await update.message.reply_text(
-            "Use:\n/r 2500 salario"
+            "Use:\n/r 1500 salario"
         )
 
         return
 
-    try:
-
-        valor = float(context.args[0])
-
-    except:
-
-        await update.message.reply_text(
-            "Valor inválido"
-        )
-
-        return
+    valor = float(context.args[0])
 
     categoria = context.args[1].lower()
 
@@ -316,7 +324,10 @@ async def receita(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     db.commit()
 
-    emoji = EMOJIS.get(categoria, "💰")
+    emoji = EMOJIS.get(
+        categoria,
+        "💰"
+    )
 
     texto = f"""
 ✅ RECEITA SALVA
@@ -349,7 +360,7 @@ async def lista(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(dados) == 0:
 
         await update.message.reply_text(
-            "Nenhuma movimentação"
+            "📭 Nenhuma movimentação"
         )
 
         return
@@ -364,13 +375,20 @@ async def lista(update: Update, context: ContextTypes.DEFAULT_TYPE):
         tipo = mov[3]
         data = mov[4]
 
-        emoji = EMOJIS.get(categoria, "💰")
+        emoji = EMOJIS.get(
+            categoria,
+            "💰"
+        )
+
+        if tipo == "gasto":
+            tipo_emoji = "💸"
+        else:
+            tipo_emoji = "💰"
 
         texto += (
             f"{emoji} {nome}\n"
-            f"💵 R${valor}\n"
+            f"{tipo_emoji} R${valor}\n"
             f"📂 {categoria}\n"
-            f"📌 {tipo}\n"
             f"📅 {data}\n\n"
         )
 
@@ -401,16 +419,16 @@ async def total(update: Update, context: ContextTypes.DEFAULT_TYPE):
     saldo = receitas - gastos
 
     texto = f"""
-📊 RESUMO GERAL
+📊 RELATÓRIO GERAL
 
 💸 Gastos:
-R${round(gastos,2)}
+R${round(gastos, 2)}
 
 💰 Receitas:
-R${round(receitas,2)}
+R${round(receitas, 2)}
 
 🏦 Saldo:
-R${round(saldo,2)}
+R${round(saldo, 2)}
 """
 
     await update.message.reply_text(texto)
@@ -433,12 +451,12 @@ async def hoje(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(dados) == 0:
 
         await update.message.reply_text(
-            "Nenhuma movimentação hoje"
+            "📭 Nenhuma movimentação hoje"
         )
 
         return
 
-    texto = f"📅 HOJE ({data})\n\n"
+    texto = f"📅 MOVIMENTAÇÕES DE HOJE\n\n"
 
     for mov in dados:
 
@@ -446,7 +464,10 @@ async def hoje(update: Update, context: ContextTypes.DEFAULT_TYPE):
         valor = mov[1]
         categoria = mov[2]
 
-        emoji = EMOJIS.get(categoria, "💰")
+        emoji = EMOJIS.get(
+            categoria,
+            "💰"
+        )
 
         texto += (
             f"{emoji} {nome} - "
@@ -455,9 +476,11 @@ async def hoje(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(texto)
 
-# ================= MES =================
+# ================= MÊS =================
 
 async def mes(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    mes_atual = datetime.now().strftime("%m/%Y")
 
     cursor.execute(
         "SELECT * FROM movimentacoes"
@@ -465,41 +488,33 @@ async def mes(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     dados = cursor.fetchall()
 
-    if len(dados) == 0:
+    texto = f"📆 RELATÓRIO DO MÊS\n\n"
 
-        await update.message.reply_text(
-            "Nenhuma movimentação"
-        )
-
-        return
-
-    total_gastos = 0
-    total_receitas = 0
+    total = 0
 
     for mov in dados:
 
-        valor = mov[1]
-        tipo = mov[3]
+        data = mov[4]
 
-        if tipo == "gasto":
-            total_gastos += valor
-        else:
-            total_receitas += valor
+        if mes_atual in data:
 
-    saldo = total_receitas - total_gastos
+            nome = mov[0]
+            valor = mov[1]
+            categoria = mov[2]
 
-    texto = f"""
-📆 FECHAMENTO MENSAL
+            emoji = EMOJIS.get(
+                categoria,
+                "💰"
+            )
 
-💸 Gastos:
-R${round(total_gastos,2)}
+            texto += (
+                f"{emoji} {nome} - "
+                f"R${valor} ({categoria})\n"
+            )
 
-💰 Receitas:
-R${round(total_receitas,2)}
+            total += valor
 
-🏦 Saldo:
-R${round(saldo,2)}
-"""
+    texto += f"\n🏦 Total movimentado:\nR${round(total,2)}"
 
     await update.message.reply_text(texto)
 
@@ -545,7 +560,7 @@ async def ranking(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     dados = cursor.fetchall()
 
-    texto = "🏆 RANKING\n\n"
+    texto = "🏆 RANKING DE GASTOS\n\n"
 
     for pos, item in enumerate(dados, start=1):
 
@@ -569,6 +584,10 @@ app = (
 
 app.add_handler(
     CommandHandler("start", start)
+)
+
+app.add_handler(
+    CommandHandler("menu", menu)
 )
 
 app.add_handler(
@@ -607,6 +626,6 @@ app.add_handler(
     CallbackQueryHandler(botoes)
 )
 
-print("FEROZ FINANCE ONLINE 😄")
+print("💎 FEROZ FINANCE ONLINE")
 
 app.run_polling()
