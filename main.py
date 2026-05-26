@@ -1,5 +1,3 @@
-main.py
-
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
@@ -10,7 +8,6 @@ from telegram.ext import (
 )
 
 import sqlite3
-from datetime import datetime
 import os
 
 # ================= TOKEN =================
@@ -39,31 +36,52 @@ CREATE TABLE IF NOT EXISTS movimentacoes(
     nome TEXT,
     valor REAL,
     categoria TEXT,
-    tipo TEXT,
-    data TEXT
+    tipo TEXT
 )
 """)
 
 db.commit()
 
-# ================= EMOJIS =================
+# ================= MENU =================
 
-EMOJIS = {
-    "mercado": "🛒",
-    "combustivel": "⛽",
-    "gasolina": "⛽",
-    "lanche": "🍔",
-    "ifood": "🍕",
-    "internet": "🌐",
-    "uber": "🚗",
-    "farmacia": "💊",
-    "cartao": "💳",
-    "roupa": "👕",
-    "pix": "📲",
-    "salario": "💰",
-    "extra": "🪙",
-    "presente": "🎁"
-}
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    teclado = [
+
+        ["➕ Gasto", "💰 Receita"],
+
+        ["📊 Relatório", "📋 Lista"],
+
+        ["🏆 Ranking", "🗑 Apagar"]
+
+    ]
+
+    menu = ReplyKeyboardMarkup(
+        teclado,
+        resize_keyboard=True
+    )
+
+    texto = """
+💎 FEROZ FINANCE
+
+━━━━━━━━━━━━━━━━━━
+
+💸 Gasto:
+g 50 mercado
+
+💰 Receita:
+r 1500 salario
+
+🗑 Apagar:
+apagar 1
+
+━━━━━━━━━━━━━━━━━━
+"""
+
+    await update.message.reply_text(
+        texto,
+        reply_markup=menu
+    )
 
 # ================= PEGAR NOME =================
 
@@ -77,69 +95,28 @@ def pegar_nome(user_id):
 
     return "Usuário"
 
-# ================= START =================
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    teclado = [
-        ["➕ Gasto", "💰 Receita"],
-        ["📊 Relatório", "🏦 Saldo"],
-        ["📋 Lista", "🏆 Ranking"],
-        ["🗑 Apagar"]
-    ]
-
-    menu = ReplyKeyboardMarkup(
-        teclado,
-        resize_keyboard=True
-    )
-
-    texto = """
-💎 FEROZ FINANCE
-
-━━━━━━━━━━━━━━━━━━
-🏦 Sistema Financeiro Premium
-━━━━━━━━━━━━━━━━━━
-
-💸 Registrar gasto:
-G 50 mercado
-
-💰 Registrar receita:
-R 1500 salario
-
-🗑 Apagar movimentação:
-APAGAR 3
-
-━━━━━━━━━━━━━━━━━━
-"""
-
-    await update.message.reply_text(
-        texto,
-        reply_markup=menu
-    )
-
 # ================= GASTO =================
 
 async def registrar_gasto(update):
 
-    texto = update.message.text.lower()
-
-    partes = texto.split()
+    partes = update.message.text.split()
 
     if len(partes) < 3:
 
         await update.message.reply_text(
-            "Use:\nG 50 mercado"
+            "Use:\ng 50 mercado"
         )
 
         return
 
     try:
+
         valor = float(partes[1])
 
     except:
 
         await update.message.reply_text(
-            "Valor inválido"
+            "Valor inválido."
         )
 
         return
@@ -150,71 +127,52 @@ async def registrar_gasto(update):
         update.effective_user.id
     )
 
-    data = datetime.now().strftime(
-        "%d/%m/%Y %H:%M"
-    )
-
     cursor.execute(
         """
         INSERT INTO movimentacoes
-        (nome, valor, categoria, tipo, data)
-        VALUES (?, ?, ?, ?, ?)
+        (nome, valor, categoria, tipo)
+        VALUES (?, ?, ?, ?)
         """,
         (
             nome,
             valor,
             categoria,
-            "gasto",
-            data
+            "gasto"
         )
     )
 
     db.commit()
 
-    emoji = EMOJIS.get(
-        categoria,
-        "💸"
-    )
-
     await update.message.reply_text(f"""
 ✅ GASTO SALVO
 
-{emoji} Categoria:
-{categoria}
-
-💵 Valor:
-R${valor}
-
-👤 Usuário:
-{nome}
-
-📅 Data:
-{data}
+👤 {nome}
+💵 R${valor}
+📂 {categoria}
 """)
 
 # ================= RECEITA =================
 
 async def registrar_receita(update):
 
-    texto = update.message.text.lower()
-
-    partes = texto.split()
+    partes = update.message.text.split()
 
     if len(partes) < 3:
 
         await update.message.reply_text(
-            "Use:\nR 1500 salario"
+            "Use:\nr 1500 salario"
         )
 
         return
 
     try:
+
         valor = float(partes[1])
 
     except:
 
         await update.message.reply_text(
-            "Valor inválido"
+            "Valor inválido."
         )
 
         return
@@ -225,61 +183,47 @@ async def registrar_receita(update):
         update.effective_user.id
     )
 
-    data = datetime.now().strftime(
-        "%d/%m/%Y %H:%M"
-    )
-
     cursor.execute(
         """
         INSERT INTO movimentacoes
-        (nome, valor, categoria, tipo, data)
-        VALUES (?, ?, ?, ?, ?)
+        (nome, valor, categoria, tipo)
+        VALUES (?, ?, ?, ?)
         """,
         (
             nome,
             valor,
             categoria,
-            "receita",
-            data
+            "receita"
         )
     )
 
     db.commit()
 
-    emoji = EMOJIS.get(
-        categoria,
-        "💰"
-    )
-
     await update.message.reply_text(f"""
 ✅ RECEITA SALVA
 
-{emoji} Categoria:
-{categoria}
-
-💵 Valor:
-R${valor}
-
-👤 Usuário:
-{nome}
-
-📅 Data:
-{data}
+👤 {nome}
+💵 R${valor}
+📂 {categoria}
 """)
 
 # ================= RELATÓRIO =================
 
 async def relatorio(update):
 
-    cursor.execute(
-        "SELECT SUM(valor) FROM movimentacoes WHERE tipo='gasto'"
-    )
+    cursor.execute("""
+    SELECT SUM(valor)
+    FROM movimentacoes
+    WHERE tipo='gasto'
+    """)
 
     gastos = cursor.fetchone()[0]
 
-    cursor.execute(
-        "SELECT SUM(valor) FROM movimentacoes WHERE tipo='receita'"
-    )
+    cursor.execute("""
+    SELECT SUM(valor)
+    FROM movimentacoes
+    WHERE tipo='receita'
+    """)
 
     receitas = cursor.fetchone()[0]
 
@@ -310,16 +254,18 @@ R${round(saldo,2)}
 
 async def lista(update):
 
-    cursor.execute(
-        "SELECT * FROM movimentacoes ORDER BY id DESC LIMIT 15"
-    )
+    cursor.execute("""
+    SELECT * FROM movimentacoes
+    ORDER BY id DESC
+    LIMIT 10
+    """)
 
     dados = cursor.fetchall()
 
     if len(dados) == 0:
 
         await update.message.reply_text(
-            "Nenhuma movimentação"
+            "Nenhuma movimentação."
         )
 
         return
@@ -328,20 +274,11 @@ async def lista(update):
 
     for mov in dados:
 
-        idd = mov[0]
-        nome = mov[1]
-        valor = mov[2]
-        categoria = mov[3]
-
-        emoji = EMOJIS.get(
-            categoria,
-            "💰"
-        )
-
         texto += (
-            f"#{idd} {emoji} {categoria}\n"
-            f"💵 R${valor}\n"
-            f"👤 {nome}\n\n"
+            f"#{mov[0]} | "
+            f"{mov[1]} | "
+            f"R${mov[2]} | "
+            f"{mov[3]}\n"
         )
 
     await update.message.reply_text(texto)
@@ -350,14 +287,12 @@ async def lista(update):
 
 async def apagar(update):
 
-    texto = update.message.text.lower()
-
-    partes = texto.split()
+    partes = update.message.text.split()
 
     if len(partes) < 2:
 
         await update.message.reply_text(
-            "Use:\nAPAGAR 3"
+            "Use:\napagar 1"
         )
 
         return
@@ -372,7 +307,7 @@ async def apagar(update):
     db.commit()
 
     await update.message.reply_text(
-        f"🗑 Registro {idd} apagado"
+        f"🗑 Registro {idd} apagado."
     )
 
 # ================= RANKING =================
@@ -393,68 +328,61 @@ async def ranking(update):
 
     for pos, item in enumerate(dados, start=1):
 
-        nome = item[0]
-        valor = item[1]
-
         texto += (
-            f"{pos}° {nome}\n"
-            f"💸 R${round(valor,2)}\n\n"
+            f"{pos}° {item[0]}\n"
+            f"💸 R${round(item[1],2)}\n\n"
         )
 
     await update.message.reply_text(texto)
 
-# ================= MENSAGENS =================
+# ================= MENU =================
 
 async def mensagens(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if update.effective_user.id not in ADMINS:
         return
 
-    texto = update.message.text
+    texto = update.message.text.lower()
 
-    if texto == "➕ Gasto":
-
-        await update.message.reply_text(
-            "💸 Exemplo:\nG 50 mercado"
-        )
-
-    elif texto == "💰 Receita":
+    if texto == "➕ gasto":
 
         await update.message.reply_text(
-            "💰 Exemplo:\nR 1500 salario"
+            "Digite:\ng 50 mercado"
         )
 
-    elif texto == "📊 Relatório":
+    elif texto == "💰 receita":
+
+        await update.message.reply_text(
+            "Digite:\nr 1500 salario"
+        )
+
+    elif texto == "📊 relatório":
 
         await relatorio(update)
 
-    elif texto == "🏦 Saldo":
-
-        await relatorio(update)
-
-    elif texto == "📋 Lista":
+    elif texto == "📋 lista":
 
         await lista(update)
 
-    elif texto == "🏆 Ranking":
+    elif texto == "🏆 ranking":
 
         await ranking(update)
 
-    elif texto == "🗑 Apagar":
+    elif texto == "🗑 apagar":
 
         await update.message.reply_text(
-            "🗑 Exemplo:\nAPAGAR 3"
+            "Digite:\napagar 1"
         )
 
-    elif texto.lower().startswith("g "):
+    elif texto.startswith("g "):
 
         await registrar_gasto(update)
 
-    elif texto.lower().startswith("r "):
+    elif texto.startswith("r "):
 
         await registrar_receita(update)
 
-    elif texto.lower().startswith("apagar"):
+    elif texto.startswith("apagar"):
 
         await apagar(update)
 
@@ -477,41 +405,6 @@ app.add_handler(
     )
 )
 
-print("💎 FEROZ FINANCE ONLINE")
+print("FEROZ ONLINE ✅")
 
 app.run_polling()
-
-requirements.txt
-
-python-telegram-bot==20.7
-
-PASSO IMPORTANTE
-
-No GitHub:
-
-1. Abra main.py
-
-
-2. Apague tudo
-
-
-3. Cole SOMENTE o código de dentro do bloco python
-
-
-4. Salve em Commit changes
-
-
-5. Crie também um arquivo chamado:
-
-
-
-requirements.txt
-
-6. Cole o texto do requirements nele
-
-
-7. Commit changes
-
-
-
-Depois o Railway vai parar de dar erro.
